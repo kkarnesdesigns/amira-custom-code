@@ -50,14 +50,14 @@
 
 /* =============================================================================
      1. Clickable CMS cards (safe)
+     – Forces pointer-events on card images and adds direct onclick.
      – Delegation for card body / "Read the Post" clicks.
-     – Wraps card images in <a> tags so they are native links.
      – Re-runs after Finsweet pagination loads new items.
   ============================================================================= */
 (() => {
   const { onReady } = window.__DF_UTILS__;
 
-  function wrapCardImages() {
+  function initCardImages() {
     document
       .querySelectorAll(
         ".card-white-blog .box-ratio-cover:not(.__img-linked), .grid-blog-content .box-ratio-cover:not(.__img-linked)"
@@ -68,18 +68,21 @@
         if (!block) return;
         const link = block.querySelector(".is-cms-link");
         if (!link?.href) return;
-        const a = document.createElement("a");
-        a.href = link.href;
-        a.style.display = "block";
-        img.parentNode.insertBefore(a, img);
-        a.appendChild(img);
+        const href = link.href;
+        img.style.pointerEvents = "auto";
+        img.style.cursor = "pointer";
+        img.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.location.href = href;
+        });
       });
   }
 
   onReady(() => {
-    wrapCardImages();
+    initCardImages();
     document.addEventListener("fs-cmsload", () =>
-      requestAnimationFrame(wrapCardImages)
+      requestAnimationFrame(initCardImages)
     );
 
     // Delegation for non-image, non-link areas (e.g. "Read the Post")
@@ -96,8 +99,10 @@
     );
 
     const style = document.createElement("style");
-    style.textContent =
-      ".card-white-blog, .grid-blog-content { cursor: pointer; }";
+    style.textContent = [
+      ".card-white-blog, .grid-blog-content { cursor: pointer; }",
+      ".card-white-blog .box-ratio-cover, .grid-blog-content .box-ratio-cover { pointer-events: auto !important; cursor: pointer !important; position: relative !important; z-index: 3 !important; }",
+    ].join("\n");
     document.head.appendChild(style);
   });
 })();
