@@ -50,13 +50,39 @@
 
 /* =============================================================================
      1. Clickable CMS cards (safe)
-     – Uses capture-phase event delegation so dynamically loaded pages work
-       automatically and clicks can't be swallowed by other handlers.
+     – Delegation for card body / "Read the Post" clicks.
+     – Wraps card images in <a> tags so they are native links.
+     – Re-runs after Finsweet pagination loads new items.
   ============================================================================= */
 (() => {
   const { onReady } = window.__DF_UTILS__;
+
+  function wrapCardImages() {
+    document
+      .querySelectorAll(
+        ".card-white-blog .box-ratio-cover:not(.__img-linked), .grid-blog-content .box-ratio-cover:not(.__img-linked)"
+      )
+      .forEach((img) => {
+        img.classList.add("__img-linked");
+        const block = img.closest(".card-white-blog, .grid-blog-content");
+        if (!block) return;
+        const link = block.querySelector(".is-cms-link");
+        if (!link?.href) return;
+        const a = document.createElement("a");
+        a.href = link.href;
+        a.style.display = "block";
+        img.parentNode.insertBefore(a, img);
+        a.appendChild(img);
+      });
+  }
+
   onReady(() => {
-    // Capture phase fires before any stopPropagation() in bubble phase
+    wrapCardImages();
+    document.addEventListener("fs-cmsload", () =>
+      requestAnimationFrame(wrapCardImages)
+    );
+
+    // Delegation for non-image, non-link areas (e.g. "Read the Post")
     document.addEventListener(
       "click",
       (ev) => {
@@ -69,7 +95,6 @@
       true
     );
 
-    // Ensure cards show a pointer cursor
     const style = document.createElement("style");
     style.textContent =
       ".card-white-blog, .grid-blog-content { cursor: pointer; }";
