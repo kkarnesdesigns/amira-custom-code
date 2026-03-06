@@ -50,18 +50,24 @@
 
 /* =============================================================================
      1. Clickable CMS cards (safe)
-     – Uses event delegation so dynamically loaded pages work automatically.
+     – Uses capture-phase event delegation so dynamically loaded pages work
+       automatically and clicks can't be swallowed by other handlers.
   ============================================================================= */
 (() => {
   const { onReady } = window.__DF_UTILS__;
   onReady(() => {
-    document.addEventListener("click", (ev) => {
-      const block = ev.target.closest(".card-white-blog, .grid-blog-content");
-      if (!block) return;
-      if (ev.target.closest("a, button, [role='button']")) return;
-      const link = block.querySelector(".is-cms-link");
-      if (link?.href) window.location.href = link.href;
-    });
+    // Capture phase fires before any stopPropagation() in bubble phase
+    document.addEventListener(
+      "click",
+      (ev) => {
+        const block = ev.target.closest(".card-white-blog, .grid-blog-content");
+        if (!block) return;
+        if (ev.target.closest("a, button, [role='button']")) return;
+        const link = block.querySelector(".is-cms-link");
+        if (link?.href) window.location.href = link.href;
+      },
+      true
+    );
 
     // Ensure cards show a pointer cursor
     const style = document.createElement("style");
