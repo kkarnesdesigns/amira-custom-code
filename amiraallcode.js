@@ -50,33 +50,24 @@
 
 /* =============================================================================
      1. Clickable CMS cards (safe)
+     – Uses event delegation so dynamically loaded pages work automatically.
   ============================================================================= */
 (() => {
   const { onReady } = window.__DF_UTILS__;
-
-  function initClickableCards() {
-    const blocks = document.querySelectorAll(
-      ".card-white-blog:not(.__card-inited), .grid-blog-content:not(.__card-inited)"
-    );
-    if (!blocks.length) return;
-
-    blocks.forEach((block) => {
-      block.classList.add("__card-inited");
-      block.addEventListener(
-        "click",
-        (ev) => {
-          if (ev.target.closest("a, button, [role='button']")) return;
-          const link = block.querySelector(".is-cms-link");
-          if (link?.href) window.location.href = link.href;
-        },
-        { passive: true }
-      );
-    });
-  }
-
   onReady(() => {
-    initClickableCards();
-    document.addEventListener("fs-cmsload", () => initClickableCards());
+    document.addEventListener("click", (ev) => {
+      const block = ev.target.closest(".card-white-blog, .grid-blog-content");
+      if (!block) return;
+      if (ev.target.closest("a, button, [role='button']")) return;
+      const link = block.querySelector(".is-cms-link");
+      if (link?.href) window.location.href = link.href;
+    });
+
+    // Ensure cards show a pointer cursor
+    const style = document.createElement("style");
+    style.textContent =
+      ".card-white-blog, .grid-blog-content { cursor: pointer; }";
+    document.head.appendChild(style);
   });
 })();
 
